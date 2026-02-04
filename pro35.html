@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGLC - Gestión Integral L'Hospitalet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .brand-turquoise { color: #008ba1; }
+        .bg-brand-turquoise { background-color: #008ba1; }
+        .border-brand-turquoise { border-color: #008ba1; }
+        .transition-all { transition: all 0.3s ease; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #008ba1; border-radius: 10px; }
+        .menu-item:hover { background-color: rgba(0, 139, 161, 0.1); color: #008ba1; }
+        .menu-item-active { background-color: #008ba1 !important; color: white !important; shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        @keyframes ai-pulse { 0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 139, 161, 0.7); } 50% { opacity: 0.6; transform: scale(1.1); box-shadow: 0 0 12px 4px rgba(0, 139, 161, 0.4); } }
+        .ai-status-dot { animation: ai-pulse 2s infinite ease-in-out; }
+    </style>
+</head>
+<body class="bg-[#f0f9fa] text-slate-800">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <aside class="w-72 bg-white border-r border-slate-200 flex flex-col z-20 shadow-xl">
+            <div class="p-8 border-b border-slate-100 flex flex-col items-center justify-center">
+                <div class="w-12 h-12 bg-[#008ba1] rounded-lg flex items-center justify-center mb-3 shadow-lg">
+                    <i class="fas fa-landmark text-white text-xl"></i>
+                </div>
+                <h1 class="text-[#008ba1] font-black text-center leading-tight tracking-tighter uppercase text-sm italic">
+                    Ajuntament de<br><span class="text-lg">L'Hospitalet</span>
+                </h1>
+            </div>
+            
+            <div class="p-6 overflow-y-auto custom-scroll flex-grow text-sm">
+                <nav id="sidebar-nav" class="space-y-1">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 px-3 italic">Administración</p>
+                    <button id="nav-dash" onclick="mostrarDashboard(this)" class="menu-item w-full flex items-center p-3 rounded-xl transition-all group font-semibold">
+                        <i class="fas fa-chart-pie mr-3"></i> Dashboard General
+                    </button>
+                    
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-8 mb-3 px-3 italic">Filtros Rápidos</p>
+                    <button onclick="filtrarLicencias('Todos', this)" class="menu-item w-full flex items-center p-3 text-slate-600 rounded-xl transition-all font-medium">
+                        <i class="fas fa-archive mr-3 opacity-60"></i> Todos
+                    </button>
+                    <button onclick="filtrarLicencias('Por revisar', this)" class="menu-item w-full flex items-center p-3 text-slate-600 rounded-xl transition-all font-medium">
+                        <i class="fas fa-clock mr-3 opacity-60"></i> Por revisar
+                    </button>
+                    <button onclick="filtrarLicencias('Requerimiento', this)" class="menu-item w-full flex items-center p-3 text-slate-600 rounded-xl transition-all font-medium text-amber-600">
+                        <i class="fas fa-exclamation-circle mr-3"></i> Requerimiento
+                    </button>
+                    <button onclick="filtrarLicencias('Aprobadas', this)" class="menu-item w-full flex items-center p-3 text-slate-600 rounded-xl transition-all font-medium text-green-600">
+                        <i class="fas fa-check-circle mr-3"></i> Aprobadas
+                    </button>
+                    <button onclick="filtrarLicencias('Rechazadas', this)" class="menu-item w-full flex items-center p-3 text-slate-600 rounded-xl font-bold text-red-600">
+                        <i class="fas fa-times-circle mr-3"></i> Rechazadas
+                    </button>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="flex-grow flex flex-col relative overflow-hidden">
+            <header class="h-16 border-b border-slate-200 bg-white/90 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
+                <div id="header-title" class="text-xs font-bold text-slate-400 uppercase tracking-[2px] italic">Gestión de Licencias</div>
+                <div class="w-8 h-8 rounded-lg bg-brand-turquoise flex items-center justify-center text-[10px] text-white font-bold shadow-md">GT</div>
+            </header>
+            <div id="main-view" class="flex-grow flex flex-col overflow-y-auto custom-scroll p-10 bg-[#f9fafb]"></div>
+        </main>
+    </div>
+
+    <script>
+        const licenciasData = [
+            // POR REVISAR (10)
+            { id: "LH-26-001", expediente: "SERIE 'NIT I DIA' - TV3", categoria: "Por revisar", solicitante: "Mediapro Studio", barrio: "Bellvitge", probabilidad: "Alta", ia_msg: "Validación técnica en curso. Revisar cortes en Av. Amèrica." },
+            { id: "LH-26-002", expediente: "ANUNCIO ESTRELLA DAMM", categoria: "Por revisar", solicitante: "Filmmaster", barrio: "Plaza Europa", probabilidad: "Alta", ia_msg: "Plan de movilidad recibido. Coincide con montaje de Fira." },
+            { id: "LH-26-003", expediente: "DOCU 'CAN SERRA'", categoria: "Por revisar", solicitante: "ESCAC", barrio: "Can Serra", probabilidad: "Alta", ia_msg: "Pendiente de validar seguro de RC de la universidad." },
+            { id: "LH-26-004", expediente: "VIDEOCLIP TRAP", categoria: "Por revisar", solicitante: "Sony Music", barrio: "Gornal", probabilidad: "Media", ia_msg: "Revisar uso de vehículos en zona peatonal." },
+            { id: "LH-26-005", expediente: "CORTOMETRAJE 'EL MURO'", categoria: "Por revisar", solicitante: "Producciones 24", barrio: "Sanfeliu", probabilidad: "Media", ia_msg: "Analizando ocupación de vía pública." },
+            { id: "LH-26-021", expediente: "FASHION SHOW LH", categoria: "Por revisar", solicitante: "Models Agency", barrio: "Centro", probabilidad: "Media", ia_msg: "Revisar plan de evacuación." },
+            { id: "LH-26-022", expediente: "SPOT BANCO SABADELL", categoria: "Por revisar", solicitante: "Agencia SC", barrio: "Distrito Económico", probabilidad: "Alta", ia_msg: "Documentación enviada completa." },
+            { id: "LH-26-023", expediente: "PELÍCULA 'EL RETORNO'", categoria: "Por revisar", solicitante: "Isona Passola", barrio: "Torrassa", probabilidad: "Media", ia_msg: "Revisar ruidos nocturnos." },
+            { id: "LH-26-024", expediente: "ANUNCIO SEAT", categoria: "Por revisar", solicitante: "Shoot LH", barrio: "Gornal", probabilidad: "Alta", ia_msg: "Pendiente de pago de tasas." },
+            { id: "LH-26-025", expediente: "DOCUMENTAL 'EL RÍO'", categoria: "Por revisar", solicitante: "Green Pix", barrio: "Bellvitge", probabilidad: "Media", ia_msg: "Revisar permisos ambientales." },
+
+            // REQUERIMIENTO (10)
+            { id: "LH-26-006", expediente: "CAMPAÑA MODA PRIMAVERA", categoria: "Requerimiento", solicitante: "Inditex", barrio: "Santa Eulàlia", probabilidad: "Baja", ia_msg: "Falta DNI representante y Acta de Titularidad Real." },
+            { id: "LH-26-007", expediente: "SERIE NETFLIX 'LA LLAVE'", categoria: "Requerimiento", solicitante: "Zeta Studios", barrio: "Bellvitge", probabilidad: "Media", ia_msg: "Falta Certificado de Seguridad Social actualizado." },
+            { id: "LH-26-008", expediente: "FOTOS VOGUE", categoria: "Requerimiento", solicitante: "Condé Nast", barrio: "Fira", probabilidad: "Baja", ia_msg: "Falta el CIF de la sucursal española." },
+            { id: "LH-26-009", expediente: "VIDEOCLIP ROSALÍA", categoria: "Requerimiento", solicitante: "Columbia Records", barrio: "Florida", probabilidad: "Baja", ia_msg: "Falta Plan de Prevención de Riesgos Laborales." },
+            { id: "LH-26-010", expediente: "ANUNCIO PEPSI", categoria: "Requerimiento", solicitante: "BBDO", barrio: "Centro", probabilidad: "Media", ia_msg: "Falta fotocopia escritura poderes." },
+            { id: "LH-26-026", expediente: "DOCU 'MERCAT'", categoria: "Requerimiento", solicitante: "TV3", barrio: "Collblanc", probabilidad: "Baja", ia_msg: "Falta resolución de ayuda pública." },
+            { id: "LH-26-027", expediente: "SPOT NIKE", categoria: "Requerimiento", solicitante: "W+K", barrio: "Gornal", probabilidad: "Media", ia_msg: "Falta Pool Bancario." },
+            { id: "LH-26-028", expediente: "PELÍCULA 'EL FARO'", categoria: "Requerimiento", solicitante: "Morena Films", barrio: "Sanfeliu", probabilidad: "Baja", ia_msg: "Falta liquidación IVA 2025." },
+            { id: "LH-26-029", expediente: "SERIE MOVISTAR+", categoria: "Requerimiento", solicitante: "Bambú", barrio: "Torrassa", probabilidad: "Media", ia_msg: "Falta balance situación." },
+            { id: "LH-26-030", expediente: "ANUNCIO AUDI", categoria: "Requerimiento", solicitante: "DDB", barrio: "Bellvitge", probabilidad: "Baja", ia_msg: "Falta titularidad real." },
+
+            // APROBADAS (10)
+            { id: "LH-26-011", expediente: "PELÍCULA 'EL PRÓXIMO'", categoria: "Aprobadas", solicitante: "Morena Films", barrio: "Centro", probabilidad: "Alta", ia_msg: "Verificado. Documentación en regla para inicio inmediato." },
+            { id: "LH-26-012", expediente: "ANUNCIO COCHE ELÉCTRICO", categoria: "Aprobadas", solicitante: "Shoot LH", barrio: "Gornal", probabilidad: "Alta", ia_msg: "Validado. Movilidad autoriza el corte parcial." },
+            { id: "LH-26-013", expediente: "SPOT TURISMO L'H", categoria: "Aprobadas", solicitante: "Ajuntament", barrio: "Bellvitge", probabilidad: "Alta", ia_msg: "Validado internamente." },
+            { id: "LH-26-014", expediente: "SERIE HBO 'SANTOS'", categoria: "Aprobadas", solicitante: "HBO Max", barrio: "Can Boixeres", probabilidad: "Alta", ia_msg: "Validación completada." },
+            { id: "LH-26-015", expediente: "VIDEO CORPORATIVO FIRA", categoria: "Aprobadas", solicitante: "Fira BCN", barrio: "Plaza Europa", probabilidad: "Alta", ia_msg: "Autorizado por seguridad." },
+            { id: "LH-26-031", expediente: "DOCU 'TECLA SALA'", categoria: "Aprobadas", solicitante: "Cultura LH", barrio: "Sanfeliu", probabilidad: "Alta", ia_msg: "Todo OK." },
+            { id: "LH-26-032", expediente: "SPOT COCA COLA", categoria: "Aprobadas", solicitante: "McCann", barrio: "Distrito Cultural", probabilidad: "Alta", ia_msg: "Aprobado." },
+            { id: "LH-26-033", expediente: "SERIE AMAZON", categoria: "Aprobadas", solicitante: "Amazon Studios", barrio: "Gran Via", probabilidad: "Alta", ia_msg: "Aprobado." },
+            { id: "LH-26-034", expediente: "PELÍCULA 'LA CALLE'", categoria: "Aprobadas", solicitante: "Warner", barrio: "Bellvitge", probabilidad: "Alta", ia_msg: "Aprobado." },
+            { id: "LH-26-035", expediente: "FOTOS ADIDAS", categoria: "Aprobadas", solicitante: "72andSunny", barrio: "Centro", probabilidad: "Alta", ia_msg: "Aprobado." },
+
+            // RECHAZADAS (10)
+            { id: "LH-26-016", expediente: "RODAJE DRONE NOCTURNO", categoria: "Rechazadas", solicitante: "Air Pro", barrio: "Pubilla Casas", probabilidad: "Baja", ia_msg: "RECHAZO: Espacio aéreo restringido por helipuerto médico." },
+            { id: "LH-26-017", expediente: "EVENTO INFLUENCER", categoria: "Rechazadas", solicitante: "Stream Agency", barrio: "Fira", probabilidad: "Baja", ia_msg: "RECHAZO: Aforo excedido." },
+            { id: "LH-26-018", expediente: "DOCU 'LA FLORIDA'", categoria: "Rechazadas", solicitante: "Independent Films", barrio: "La Florida", probabilidad: "Baja", ia_msg: "RECHAZO: Incumplimiento horario." },
+            { id: "LH-26-019", expediente: "SESIÓN 'STREET ART'", categoria: "Rechazadas", solicitante: "Urban Art", barrio: "Torrassa", probabilidad: "Baja", ia_msg: "RECHAZO: Daño a mobiliario." },
+            { id: "LH-26-020", expediente: "ANUNCIO PIROTECNIA", categoria: "Rechazadas", solicitante: "Fire Agency", barrio: "Santa Eulàlia", probabilidad: "Baja", ia_msg: "RECHAZO: Riesgo incendio fachadas." },
+            { id: "LH-26-036", expediente: "FIESTA TECHNO VÍA PÚBLICA", categoria: "Rechazadas", solicitante: "Events LH", barrio: "Centro", probabilidad: "Baja", ia_msg: "RECHAZO: Impacto acústico no viable." },
+            { id: "LH-26-037", expediente: "RODAJE TÚNEL L9", categoria: "Rechazadas", solicitante: "Productora X", barrio: "Gornal", probabilidad: "Baja", ia_msg: "RECHAZO: Seguridad TMB denegada." },
+            { id: "LH-26-038", expediente: "ANUNCIO MOTOS ACERA", categoria: "Rechazadas", solicitante: "Moto Agency", barrio: "Bellvitge", probabilidad: "Baja", ia_msg: "RECHAZO: Movilidad prohíbe circulación aceras." },
+            { id: "LH-26-039", expediente: "SPOT HELICÓPTERO", categoria: "Rechazadas", solicitante: "Sky Films", barrio: "Distrito Económico", probabilidad: "Baja", ia_msg: "RECHAZO: Altura no permitida." },
+            { id: "LH-26-040", expediente: "VIDEOCLIP NOCTURNO PLAZA", categoria: "Rechazadas", solicitante: "Music LH", barrio: "Florida", probabilidad: "Baja", ia_msg: "RECHAZO: Descanso vecinal." }
+        ];
+
+        const checklistParametros = [
+            { nombre: "D.N.I. representante legal", ok: false },
+            { nombre: "CIF de la entidad", ok: false },
+            { nombre: "Fotocopia Escritura Constitución", ok: false },
+            { nombre: "Certificado de Hacienda", ok: true },
+            { nombre: "Seguro Responsabilidad Civil (RC)", ok: false },
+            { nombre: "Plan de Movilidad y Ocupación", ok: false },
+            { nombre: "Balance situación", ok: false }
+        ];
+
+        function mostrarDashboard(element) {
+            actualizarEstiloMenu(element || document.getElementById('nav-dash'));
+            const main = document.getElementById('main-view');
+            main.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10 text-center animate-in fade-in italic">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-slate-200"><p class="text-slate-400 text-[10px] font-bold uppercase">Solicitudes</p><h2 class="text-3xl font-black italic">624</h2></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-amber-400"><p class="text-amber-600 text-[10px] font-bold uppercase">Pendientes</p><h2 class="text-3xl font-black italic">42</h2></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-brand-turquoise"><p class="brand-turquoise text-[10px] font-bold uppercase">Aprobadas</p><h2 class="text-3xl font-black brand-turquoise italic">480</h2></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-red-500"><p class="text-red-500 text-[10px] font-bold uppercase">Denegadas</p><h2 class="text-3xl font-black text-red-600 italic">102</h2></div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 italic">
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 italic">
+                        <h3 class="font-black text-sm uppercase tracking-widest mb-6 flex items-center gap-2"><i class="fas fa-map-marker-alt brand-turquoise"></i> Actividad por Barrios</h3>
+                        <div class="space-y-4">
+                            <div><div class="flex justify-between text-xs mb-1"><b>Bellvitge / Gornal</b><span>45%</span></div><div class="w-full bg-slate-100 h-2 rounded-full"><div class="bg-brand-turquoise h-2 rounded-full" style="width: 45%"></div></div></div>
+                            <div><div class="flex justify-between text-xs mb-1"><b>Plaza Europa / Fira</b><span>32%</span></div><div class="w-full bg-slate-100 h-2 rounded-full"><div class="bg-brand-turquoise h-2 rounded-full" style="width: 32%"></div></div></div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl text-white italic">
+                        <h3 class="font-black text-sm uppercase tracking-widest mb-6 flex items-center gap-2"><i class="fas fa-robot text-brand-turquoise ai-status-dot"></i> Alertas IA Críticas</h3>
+                        <div class="space-y-3">
+                            <div class="p-4 bg-slate-800 rounded-xl border-l-4 border-amber-500 text-xs italic">Exp. LH-26-006: Pendiente DNI en Santa Eulàlia.</div>
+                            <div class="p-4 bg-slate-800 rounded-xl border-l-4 border-red-500 text-xs italic">Exp. LH-26-016: Movilidad deniega acceso por seguridad.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 italic">
+                    <h3 class="font-black text-sm uppercase tracking-widest mb-10 italic">Previsión de Carga Semanal</h3>
+                    <div class="flex justify-between items-end h-40 gap-4 px-4">
+                        <div class="w-full bg-slate-50 rounded-t-2xl relative h-[40%]">
+                            <span class="absolute -top-8 w-full text-center font-black text-slate-400">24</span>
+                            <div class="bg-slate-200 w-full rounded-t-2xl absolute bottom-0 h-full"></div>
+                        </div>
+                        <div class="w-full bg-slate-50 rounded-t-2xl relative h-[70%]">
+                            <span class="absolute -top-8 w-full text-center font-black text-slate-400">48</span>
+                            <div class="bg-slate-200 w-full rounded-t-2xl absolute bottom-0 h-full"></div>
+                        </div>
+                        <div class="w-full bg-brand-turquoise rounded-t-2xl relative h-[100%] shadow-lg">
+                            <span class="absolute -top-10 w-full text-center font-black brand-turquoise text-xl">86</span>
+                        </div>
+                        <div class="w-full bg-slate-50 rounded-t-2xl relative h-[60%]">
+                            <span class="absolute -top-8 w-full text-center font-black text-slate-400">35</span>
+                            <div class="bg-slate-200 w-full rounded-t-2xl absolute bottom-0 h-full"></div>
+                        </div>
+                        <div class="w-full bg-slate-50 rounded-t-2xl relative h-[30%]">
+                            <span class="absolute -top-8 w-full text-center font-black text-slate-400">18</span>
+                            <div class="bg-slate-200 w-full rounded-t-2xl absolute bottom-0 h-full"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between px-4 mt-6 text-[10px] font-bold text-slate-400 italic"><span>LUNES</span><span>MARTES</span><span class="brand-turquoise">HOY</span><span>JUEVES</span><span>VIERNES</span></div>
+                </div>
+            `;
+        }
+
+        function filtrarLicencias(categoria, element) {
+            actualizarEstiloMenu(element);
+            document.getElementById('header-title').innerText = `Expedientes: ${categoria}`;
+            const main = document.getElementById('main-view');
+            const filtradas = categoria === 'Todos' ? licenciasData : licenciasData.filter(l => l.categoria === categoria);
+            
+            main.innerHTML = filtradas.map(lic => `
+                <div onclick="verDetalleLicencia('${lic.id}')" class="group cursor-pointer bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:border-brand-turquoise transition-all flex items-center justify-between mb-4 animate-in fade-in italic">
+                    <div class="flex items-center gap-6"><i class="fas fa-file-contract text-2xl text-slate-200 group-hover:brand-turquoise transition"></i>
+                        <div><p class="text-[10px] text-slate-400 font-bold uppercase">${lic.id} | ${lic.barrio}</p><h3 class="text-lg font-extrabold text-slate-800 group-hover:text-[#008ba1] transition uppercase tracking-tighter italic">${lic.expediente}</h3></div>
+                    </div>
+                    <i class="fas fa-chevron-right text-slate-200 group-hover:brand-turquoise transition"></i>
+                </div>
+            `).join('');
+        }
+
+        function verDetalleLicencia(id) {
+            const lic = licenciasData.find(l => l.id === id);
+            const main = document.getElementById('main-view');
+            main.innerHTML = `
+                <div class="animate-in slide-in-from-right-4 duration-500">
+                    <button onclick="filtrarLicencias('Todos')" class="brand-turquoise font-bold text-[10px] mb-8 flex items-center gap-2 hover:translate-x-[-4px] transition-all italic"><i class="fas fa-arrow-left"></i> VOLVER</button>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                        <div class="lg:col-span-2 space-y-8">
+                            <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100">
+                                <h1 class="text-3xl font-black italic text-slate-800 mb-2 uppercase tracking-tighter">${lic.expediente}</h1>
+                                <p class="brand-turquoise font-bold tracking-widest uppercase text-xs italic">${lic.solicitante}</p>
+                            </div>
+                            <div class="p-10 rounded-[2.5rem] border relative shadow-sm ${lic.categoria === 'Rechazadas' ? 'bg-red-50 border-red-200' : 'bg-[#e6f3f5] border-[#008ba1]/20'}">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <div class="w-3 h-3 rounded-full ai-status-dot ${lic.categoria === 'Rechazadas' ? 'bg-red-600' : 'bg-brand-turquoise'}"></div>
+                                    <h3 class="font-black text-xs uppercase tracking-[3px] italic ${lic.categoria === 'Rechazadas' ? 'text-red-600' : 'brand-turquoise'}">ASISTENTE IA</h3>
+                                </div>
+                                <p class="text-[#374151] italic text-xl leading-relaxed italic">"${lic.ia_msg}"</p>
+                            </div>
+                            <div id="audit-panel" class="hidden bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden animate-in zoom-in-95">
+                                <div class="bg-slate-50 p-6 border-b border-slate-100 italic italic"><h3 class="font-black text-xs uppercase tracking-widest text-slate-500">Parámetros Auditoría</h3></div>
+                                <div class="p-4 space-y-1">
+                                    ${checklistParametros.map(p => `
+                                        <div class="flex items-center justify-between p-3 border-b border-slate-50 italic rounded-xl hover:bg-slate-50 transition">
+                                            <div class="flex items-center gap-4">
+                                                ${p.ok ? '<i class="fas fa-check-circle text-green-500"></i>' : '<i class="fas fa-hourglass-half text-amber-500"></i>'}
+                                                <span class="text-sm font-medium text-slate-700">${p.nombre}</span>
+                                            </div>
+                                            <i class="fas fa-chevron-down text-slate-300 text-xs"></i>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="bg-[#0b1120] p-10 rounded-[2.5rem] shadow-2xl text-white italic italic">
+                                <h3 class="font-bold mb-8 flex items-center gap-3"><i class="fas fa-layer-group text-slate-500"></i> Coordinación Territorial</h3>
+                                <div class="space-y-3 italic">
+                                    <div class="flex items-center justify-between p-5 bg-[#1e293b] rounded-2xl"><span>Movilidad</span><span class="${lic.categoria === 'Rechazadas' ? 'text-red-500' : 'text-green-500'} text-[10px] font-bold italic">${lic.categoria === 'Rechazadas' ? 'NO VIABLE' : 'VALIDADO'}</span></div>
+                                    <div class="flex items-center justify-between p-5 bg-[#1e293b] rounded-2xl"><span>Guardia Urbana</span><span class="${lic.categoria === 'Rechazadas' ? 'text-red-500' : 'text-amber-500'} text-[10px] font-bold italic">${lic.categoria === 'Rechazadas' ? 'RECHAZADO' : 'PENDIENTE'}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl text-white italic italic">
+                                <h3 class="font-bold text-xl mb-8 italic uppercase tracking-tighter">Gestión Interna</h3>
+                                <button onclick="activarAuditoria()" class="w-full py-4 bg-brand-turquoise hover:bg-[#00768a] text-white rounded-2xl font-black uppercase text-xs mb-4 shadow-lg italic italic">REVISAR</button>
+                                <button class="w-full py-4 bg-slate-800 text-slate-400 rounded-2xl font-bold text-xs uppercase border border-slate-700 mb-6 italic italic">NOTIFICAR</button>
+                                <div class="pt-6 border-t border-slate-800 italic italic"><button class="w-full py-5 ${lic.probabilidad === 'Alta' ? 'bg-green-600' : 'bg-slate-700 opacity-20'} text-white rounded-2xl font-black uppercase text-xs">EMITIR LICENCIA</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function activarAuditoria() { document.getElementById('audit-panel').classList.remove('hidden'); }
+        function actualizarEstiloMenu(el) { document.querySelectorAll('.menu-item, .menu-item-active').forEach(m => { m.classList.remove('menu-item-active'); m.classList.add('menu-item'); }); if(el) { el.classList.add('menu-item-active'); el.classList.remove('menu-item'); } }
+
+        mostrarDashboard();
+    </script>
+</body>
+</html>
